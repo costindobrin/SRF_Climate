@@ -1,0 +1,45 @@
+library(readxl)
+library(tidyverse)
+df1 <- read_excel("data/Transportation/10301_hev_sales.xlsx", skip = 2) %>% 
+  select(-X__1) %>%   # remove first column
+  filter(!is.na(Total)) %>%  # remove notes below data
+  filter(Vehicle != "TOTAL")
+
+tidydf1 <- gather(df1, key = year, value = sales, -Vehicle)
+
+
+df2 <- read_excel("data/Energy/Table_1.1_Primary_Energy_Overview.xlsx", sheet = 2, skip = 9) %>% 
+  filter(!is.na(`Annual Total`))
+
+dfplot <- df2 %>% select(Year = `Annual Total`,
+                         Fossil = `Total Fossil Fuels Production`,
+                         Renew = `Total Renewable Energy Production`) %>% 
+  gather(key = Type, value = BTU, -Year) %>% 
+  mutate(BTU = as.numeric(BTU))
+
+ggplot(dfplot, aes(x = Year, y = BTU, group = Type, color = Type)) + geom_line()
+
+
+df2 <- read_excel("data/Energy/Table_1.1_Primary_Energy_Overview.xlsx", sheet = 2, skip = 9) %>% 
+  filter(!is.na(`Annual Total`))
+
+dfplot <- df2 %>% select(Year = `Annual Total`,
+                         Fossil = `Total Fossil Fuels Production`,
+                         Renew = `Total Renewable Energy Production`,
+                         Total = `Total Primary Energy Production`) %>% 
+  gather(key = Type, value = BTU, -Year) %>% 
+  mutate(BTU = as.numeric(BTU))
+
+ggplot(dfplot, aes(x = Year, y = BTU, group = Type, color = Type)) + geom_line()
+
+
+# Renew as % of Total
+
+df3 <- df2 %>% select (Year = `Annual Total`,
+                       
+                       Renew = `Total Renewable Energy Production`,
+                       Total = `Total Primary Energy Production`) %>% 
+  mutate(Renew = as.numeric(Renew), Total = as.numeric(Total)) %>% 
+  mutate(Percent = Renew / Total)
+
+ggplot(df3, aes(x = Year, y = Percent)) + geom_line()
